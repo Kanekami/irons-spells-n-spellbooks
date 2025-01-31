@@ -69,7 +69,7 @@ public class PyriumStaffRenderer extends BlockEntityWithoutLevelRenderer {
         applyTransform(transform,leftHanded,poseStack);
         poseStack.mulPose(Axis.ZP.rotationDegrees(135));
         poseStack.mulPose(Axis.YP.rotationDegrees(-90));
-        poseStack.translate(0,-26/32f,0);
+        poseStack.translate(0,-18.4142/16f,0);
         poseStack.scale(0.5f,0.5f,0.5f);
         tridentModel.renderToBuffer(poseStack, vertexconsumer1, combinedLightIn, combinedOverlayIn);
         poseStack.popPose();
