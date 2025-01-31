@@ -78,6 +78,8 @@ import io.redspace.ironsspellbooks.item.SpellBook;
 import io.redspace.ironsspellbooks.item.WaywardCompass;
 import io.redspace.ironsspellbooks.item.weapons.AutoloaderCrossbow;
 import io.redspace.ironsspellbooks.item.weapons.StaffItem;
+import io.redspace.ironsspellbooks.item.weapons.pyrium_staff.PyriumStaffClientExtensions;
+import io.redspace.ironsspellbooks.item.weapons.pyrium_staff.PyriumStaffHeadModel;
 import io.redspace.ironsspellbooks.particle.*;
 import io.redspace.ironsspellbooks.player.ClientMagicData;
 import io.redspace.ironsspellbooks.registries.*;
@@ -99,13 +101,10 @@ import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CrossbowItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.neoforged.api.distmarker.Dist;
@@ -116,7 +115,6 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import org.jetbrains.annotations.Nullable;
 import top.theillusivec4.curios.api.client.CuriosRendererRegistry;
@@ -131,13 +129,8 @@ public class ClientSetup {
 
     @SubscribeEvent
     public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
-        event.registerItem(new IClientItemExtensions() {
-            @Nullable
-            @Override
-            public HumanoidModel.ArmPose getArmPose(LivingEntity entityLiving, InteractionHand hand, ItemStack itemStack) {
-                return StaffArmPose.STAFF_ARM_POSE.getValue();
-            }
-        }, ItemRegistry.getIronsItems().stream().filter(item -> item.get() instanceof StaffItem).map(holder -> (Item) holder.get()).toArray(Item[]::new));
+        event.registerItem(new ClientStaffItemExtensions(), ItemRegistry.getIronsItems().stream().filter(item -> item.get() instanceof StaffItem staffItem && !staffItem.hasCustomRendering()).map(holder -> (Item) holder.get()).toArray(Item[]::new));
+        event.registerItem(new PyriumStaffClientExtensions(), ItemRegistry.GRAYBEARD_STAFF.get());
     }
 
     @SubscribeEvent
@@ -165,6 +158,7 @@ public class ClientSetup {
         event.registerLayerDefinition(SkullProjectileRenderer.MODEL_LAYER_LOCATION, SkullProjectileRenderer::createBodyLayer);
         event.registerLayerDefinition(ArmorCapeLayer.ARMOR_CAPE_LAYER, ArmorCapeLayer::createBodyLayer);
         event.registerLayerDefinition(IceSpikeRenderer.IceSpikeModel.LAYER_LOCATION, IceSpikeRenderer.IceSpikeModel::createBodyLayer);
+        event.registerLayerDefinition(PyriumStaffHeadModel.LAYER_LOCATION, PyriumStaffHeadModel::createBodyLayer);
     }
 
     @SubscribeEvent
@@ -377,7 +371,7 @@ public class ClientSetup {
                             }
                         }
                     });
-                    animation.addModifier(IronsAdjustmentModifier.INSTANCE,0);
+                    animation.addModifier(IronsAdjustmentModifier.INSTANCE, 0);
                     animation.addModifierLast(new MirrorModifier() {
                         @Override
                         public boolean isEnabled() {
@@ -399,6 +393,7 @@ public class ClientSetup {
             event.register(ModelResourceLocation.standalone(ScrollModel.getScrollModelLocation(schoolType)));
         }
         event.register(ModelResourceLocation.standalone(IronsSpellbooks.id("item/template_open_spell_book_model")));
+        event.register(ModelResourceLocation.standalone(IronsSpellbooks.id("item/pyrium_staff_haft")));
     }
 
     @SubscribeEvent
