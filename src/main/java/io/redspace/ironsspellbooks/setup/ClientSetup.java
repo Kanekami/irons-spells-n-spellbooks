@@ -80,6 +80,7 @@ import io.redspace.ironsspellbooks.item.weapons.AutoloaderCrossbow;
 import io.redspace.ironsspellbooks.item.weapons.StaffItem;
 import io.redspace.ironsspellbooks.item.weapons.pyrium_staff.PyriumStaffClientExtensions;
 import io.redspace.ironsspellbooks.item.weapons.pyrium_staff.PyriumStaffHeadModel;
+import io.redspace.ironsspellbooks.item.weapons.pyrium_staff.PyriumStaffOrbModel;
 import io.redspace.ironsspellbooks.particle.*;
 import io.redspace.ironsspellbooks.player.ClientMagicData;
 import io.redspace.ironsspellbooks.registries.*;
@@ -159,6 +160,7 @@ public class ClientSetup {
         event.registerLayerDefinition(ArmorCapeLayer.ARMOR_CAPE_LAYER, ArmorCapeLayer::createBodyLayer);
         event.registerLayerDefinition(IceSpikeRenderer.IceSpikeModel.LAYER_LOCATION, IceSpikeRenderer.IceSpikeModel::createBodyLayer);
         event.registerLayerDefinition(PyriumStaffHeadModel.LAYER_LOCATION, PyriumStaffHeadModel::createBodyLayer);
+        event.registerLayerDefinition(PyriumStaffOrbModel.LAYER_LOCATION, PyriumStaffOrbModel::createBodyLayer);
     }
 
     @SubscribeEvent
