@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import io.redspace.ironsspellbooks.IronsSpellbooks;
-import io.redspace.ironsspellbooks.render.RenderHelper;
+import io.redspace.ironsspellbooks.util.MinecraftInstanceHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Quaternionf;
@@ -51,60 +52,29 @@ public class PyriumStaffRenderer extends BlockEntityWithoutLevelRenderer {
         poseStack.popPose();
     }
 
-    private static final ResourceLocation TEXTURE = new ResourceLocation(IronsSpellbooks.MODID, "textures/entity/fire_boss/tyros_flame.png");
-    static int frameCount = 8;
-    static int ticksPerFrame = 1;
-
     private void render(PoseStack poseStack, MultiBufferSource bufferSource, ItemStack itemStack, ItemDisplayContext transformType, int combinedLightIn, int combinedOverlayIn, boolean leftHanded) {
         // render item part
         renderer.render(itemStack, transformType, leftHanded, poseStack, bufferSource, combinedLightIn, combinedOverlayIn, haftModel);
         // render modelled part
         poseStack.pushPose();
-//        haftModel.applyTransform(transformType, poseStack, leftHanded);
+
         ItemTransform transform = haftModel.getTransforms().getTransform(transformType);
-
-
-        // manual adjustments
-//        poseStack.translate(0,-2,-1.5/16f);
         applyTransform(transform, leftHanded, poseStack);
         poseStack.mulPose(Axis.ZP.rotationDegrees(135));
         poseStack.mulPose(Axis.YP.rotationDegrees(-90));
+
         poseStack.translate(0, -1.42 / 16f - 9.5 / 32f, 0);
         poseStack.scale(0.5f, 0.5f, 0.5f);
         headModel.renderToBuffer(poseStack, ItemRenderer.getFoilBufferDirect(
                 bufferSource, headModel.renderType(), false, itemStack.hasFoil()
         ), combinedLightIn, combinedOverlayIn);
 
-        poseStack.translate(0,  - 9.5 / 32f, 0);
+        poseStack.translate(0, -9.5 / 32f, 0);
+        float f = MinecraftInstanceHelper.getPlayer() == null ? 0 : (MinecraftInstanceHelper.getPlayer().tickCount + Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true)) *.75f;
+        float scale = (Mth.sin(f * .5f) + Mth.sin(3 * f)) / 2f * .04f + 1;
+        poseStack.translate(0, Mth.sin(f * .3f) / 32f, 0);
+        poseStack.scale(scale, scale, scale);
         orbModel.renderToBuffer(poseStack, bufferSource.getBuffer(orbModel.renderType()), LightTexture.FULL_BRIGHT, combinedOverlayIn);
-//        orbModel.renderToBuffer(poseStack, bufferSource.getBuffer(orbModel.renderType()), LightTexture.FULL_BRIGHT, combinedOverlayIn,RenderHelper.colorf(1,0,0));
-//        poseStack.scale(0.5f,0.5f,0.5f);
-//        orbModel.renderToBuffer(poseStack, bufferSource.getBuffer(RenderHelper.CustomerRenderType.magic(PyriumStaffOrbModel.TEXTURE)), LightTexture.FULL_BRIGHT, combinedOverlayIn,RenderHelper.colorf(1,1,0));
-//        poseStack.scale(0.5f,0.5f,0.5f);
-//        orbModel.renderToBuffer(poseStack, bufferSource.getBuffer(RenderHelper.CustomerRenderType.magic(PyriumStaffOrbModel.TEXTURE)), LightTexture.FULL_BRIGHT, combinedOverlayIn,RenderHelper.colorf(1,1,1));
-//
-//        if (transformType != ItemDisplayContext.GUI) {
-//            poseStack.pushPose();
-//            poseStack.scale(1.0F, -1.0F, 1.0F);
-//            poseStack.translate(0, -1.45, -0.8 / 16f);
-//            poseStack.mulPose(Axis.YP.rotationDegrees(45f));
-//            poseStack.scale(.5f, .5f, .5f);
-//            VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityCutout(TEXTURE));
-//            Matrix4f poseMatrix = poseStack.last().pose();
-//            int a = MinecraftInstanceHelper.getPlayer().tickCount;
-//            int anim = (a / ticksPerFrame) % frameCount;
-//            float uvMin = anim / (float) frameCount;
-//            float uvMax = (anim + 1) / (float) frameCount;
-//            float halfsqrt2 = 0.7071f;
-//            for (int i = 0; i < 4; i++) {
-//                poseStack.mulPose(Axis.YP.rotationDegrees(90f));
-//                consumer.addVertex(poseMatrix, 0, 0, -halfsqrt2).setColor(255, 255, 255, 255).setUv(0f, uvMax).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0f, 1f, 0f);
-//                consumer.addVertex(poseMatrix, 0, 1, -halfsqrt2).setColor(255, 255, 255, 255).setUv(0f, uvMin).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0f, 1f, 0f);
-//                consumer.addVertex(poseMatrix, 0, 1, halfsqrt2).setColor(255, 255, 255, 255).setUv(1f, uvMin).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0f, 1f, 0f);
-//                consumer.addVertex(poseMatrix, 0, 0, halfsqrt2).setColor(255, 255, 255, 255).setUv(1f, uvMax).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0f, 1f, 0f);
-//            }
-//            poseStack.popPose();
-//        }
 
         poseStack.popPose();
     }
