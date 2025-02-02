@@ -131,7 +131,7 @@ public class ClientSetup {
     @SubscribeEvent
     public static void registerClientExtensions(RegisterClientExtensionsEvent event) {
         event.registerItem(new ClientStaffItemExtensions(), ItemRegistry.getIronsItems().stream().filter(item -> item.get() instanceof StaffItem staffItem && !staffItem.hasCustomRendering()).map(holder -> (Item) holder.get()).toArray(Item[]::new));
-        event.registerItem(new PyriumStaffClientExtensions(), ItemRegistry.GRAYBEARD_STAFF.get());
+        event.registerItem(new PyriumStaffClientExtensions(), ItemRegistry.PYRIUM_STAFF.get());
     }
 
     @SubscribeEvent
