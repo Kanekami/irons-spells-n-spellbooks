@@ -24,6 +24,15 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "irons_spellbooks:pyrium_ingot"
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "irons_spellbooks:arcane_essence",
           "functions": [
             {

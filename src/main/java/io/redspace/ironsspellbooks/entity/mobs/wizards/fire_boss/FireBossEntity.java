@@ -58,6 +58,7 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
@@ -70,6 +71,7 @@ import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -113,6 +115,10 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
     private static final AttributeModifier SOUL_SCALE_MODIFIER = new AttributeModifier(IronsSpellbooks.id("soul_mode"), 0.15, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     private static final AttributeModifier MANA_MODIFIER = new AttributeModifier(IronsSpellbooks.id("mana"), 10000, AttributeModifier.Operation.ADD_VALUE);
     private int destroyBlockDelay;
+    /**
+     * Amount of player that summoned this entity. Affects power scaling and drop count
+     */
+    private int playerScale;
 
     @Override
     public void kill() {
@@ -217,14 +223,6 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
                                         new FireBossAttackKeyframe(20, new Vec3(0, .3, -2), new FireBossAttackKeyframe.SwingData(false, true))
                                 )
                                 .build(),
-//                        AttackAnimationData.builder("scythe_low_rightward_sweep")
-//                                .length(40)
-//                                .area(0.25f)
-//                                .rangeMultiplier(2f)
-//                                .attacks(
-//                                        new FireBossAttackKeyframe(20, new Vec3(0, .1, 0.8), new FireBossAttackKeyframe.SwingData(false, false))
-//                                )
-//                                .build(),
                         AttackAnimationData.builder("scythe_sideslash_downslash")
                                 .length(54)
                                 .rangeMultiplier(2f)
@@ -442,8 +440,8 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
             this.heal(5);
         }
         if (this.isAggressive() && this.tickCount % (12 * 20) == 0) {
-            int knightCount = level.getEntitiesOfClass(KeeperEntity.class, this.getBoundingBox().inflate(32, 16, 32)).size();
-            if (knightCount < 2) {
+            int knightCount = level.getEntitiesOfClass(KeeperEntity.class, this.getBoundingBox().inflate(50, 20, 50)).size();
+            if (knightCount < 2 + (Math.max(playerScale - 1, 0) / 2)) {
                 spawnKnight(this.random.nextBoolean());
             }
         }
@@ -494,7 +492,8 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
         boolean playerDeath = this.lastHurtByPlayerTime > 0;
         this.dropCustomDeathLoot(pLevel, pDamageSource, playerDeath);
         ResourceKey<LootTable> resourcekey = this.getLootTable();
-        LootTable loottable = this.level.getServer().reloadableRegistries().getLootTable(resourcekey);
+        LootTable mainLoot = this.level.getServer().reloadableRegistries().getLootTable(resourcekey);
+        LootTable lootPerPlayer = this.level.getServer().reloadableRegistries().getLootTable(ResourceKey.create(resourcekey.registryKey(), resourcekey.location().withSuffix("_per_player")));
         LootParams.Builder lootparams$builder = new LootParams.Builder(pLevel)
                 .withParameter(LootContextParams.THIS_ENTITY, this)
                 .withParameter(LootContextParams.ORIGIN, this.position())
@@ -508,7 +507,10 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
 
         LootParams lootparams = lootparams$builder.create(LootContextParamSets.ENTITY);
         ObjectArrayList<ItemStack> objectarraylist = new ObjectArrayList<>();
-        loottable.getRandomItems(lootparams, this.getLootTableSeed(), objectarraylist::add);
+        mainLoot.getRandomItems(lootparams, this.getLootTableSeed(), objectarraylist::add);
+        for (int i = 0; i < playerScale; i++) {
+            lootPerPlayer.getRandomItems(lootparams, this.getLootTableSeed(), objectarraylist::add);
+        }
         this.deathLoot = new SimpleContainer(objectarraylist.size());
         objectarraylist.forEach(deathLoot::addItem);
     }
@@ -579,6 +581,11 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
         this.populateDefaultEquipmentSlots(randomsource, pDifficulty);
         this.setLeftHanded(false);
         this.getAttribute(AttributeRegistry.MAX_MANA).addOrReplacePermanentModifier(MANA_MODIFIER);
+        this.playerScale = pLevel.getNearbyPlayers(TargetingConditions.forNonCombat().ignoreInvisibilityTesting().ignoreLineOfSight(), this, AABB.ofSize(this.position(), 60, 40, 60)).size();
+        int extraPlayers = playerScale - 1;
+        float extraHealth = extraPlayers * 60 + extraPlayers * extraPlayers * 20;
+        this.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(IronsSpellbooks.id("player_scaling"), extraHealth, AttributeModifier.Operation.ADD_VALUE));
+        this.setHealth(this.getMaxHealth());
         return pSpawnData;
     }
 
@@ -712,6 +719,7 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
     public void addAdditionalSaveData(CompoundTag pCompound) {
         super.addAdditionalSaveData(pCompound);
         pCompound.putInt("stanceBreakCount", stanceBreakCounter);
+        pCompound.putInt("playerScale", playerScale);
         if (stanceBreakTimer > 0) {
             pCompound.putInt("stanceBreakTime", stanceBreakTimer);
         }
@@ -725,6 +733,7 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
     public void readAdditionalSaveData(CompoundTag pCompound) {
         super.readAdditionalSaveData(pCompound);
         this.stanceBreakCounter = pCompound.getInt("stanceBreakCount");
+        this.playerScale = pCompound.getInt("playerScale");
         if (this.hasCustomName()) {
             this.bossEvent.setName(this.getDisplayName());
         }
