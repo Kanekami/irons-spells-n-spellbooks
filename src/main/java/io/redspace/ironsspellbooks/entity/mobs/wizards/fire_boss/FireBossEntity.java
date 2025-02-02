@@ -86,13 +86,12 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
     public static final byte STOP_FOG = 0;
     public static final byte START_FOG = 1;
     /**
-     * delay in seconds the boss will wait without being aggroed until he begins despawn sequence
+     * delay in seconds the boss will wait outside of combat until beginning despawn sequence
      */
     public static final int PROC_DESPAWN_SECONDS = 60;
     /**
      * maximum elapsed time in seconds the boss will last in unloaded chunks before deleting himself
      */
-    //todo: implement
     public static final int UNLOADED_DESPAWN_LIMIT_SECONDS = 300;
 
     @Override
@@ -791,6 +790,7 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
         if (deathLoot != null) {
             pCompound.put("deathLootItems", deathLoot.createTag(this.registryAccess()));
         }
+        pCompound.putLong("unloadedGametime", level.getGameTime());
     }
 
     @Override
@@ -816,6 +816,20 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
             this.deathLoot = new SimpleContainer(tag.size());
             this.deathLoot.fromTag(tag, this.registryAccess());
         }
+    }
+
+    @Override
+    public void load(CompoundTag pCompound) {
+        if (pCompound.contains("unloadedGametime", 99)) {
+            var unloadTimestamp = pCompound.getLong("unloadedGametime");
+            var delta = level.getGameTime() - unloadTimestamp;
+            if (delta > UNLOADED_DESPAWN_LIMIT_SECONDS * 20) {
+                this.setRemoved(RemovalReason.DISCARDED);
+                IronsSpellbooks.LOGGER.info("Refusing to load {}, elapsed time {} greater than limit {}", this, delta, UNLOADED_DESPAWN_LIMIT_SECONDS * 20);
+                return;
+            }
+        }
+        super.load(pCompound);
     }
 
     @Override
