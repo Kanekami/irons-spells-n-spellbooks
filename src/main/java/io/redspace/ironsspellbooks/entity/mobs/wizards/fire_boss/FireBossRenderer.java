@@ -28,7 +28,7 @@ public class FireBossRenderer extends AbstractSpellCastingMobRenderer {
     public void render(AbstractSpellCastingMob entity, float entityYaw, float partialTick, PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
         if (entity instanceof FireBossEntity fireBossEntity && fireBossEntity.isSpawning()) {
             float f = fireBossEntity.getSpawnWalkPercent(partialTick);
-            if(f == 0){
+            if (f == 0) {
                 // not visible, dont render
                 return;
             }
@@ -47,7 +47,7 @@ public class FireBossRenderer extends AbstractSpellCastingMobRenderer {
         return OverlayTexture.NO_OVERLAY;
     }
 
-    static final int deathFadeTime = 80;
+    static final int deathFadeTime = 120;
 
     @Override
     public Color getRenderColor(AbstractSpellCastingMob animatable, float partialTick, int packedLight) {
@@ -68,7 +68,7 @@ public class FireBossRenderer extends AbstractSpellCastingMobRenderer {
 
     @Override
     public RenderType getRenderType(AbstractSpellCastingMob animatable, ResourceLocation texture, @Nullable MultiBufferSource bufferSource, float partialTick) {
-        if (animatable.isDeadOrDying() || animatable instanceof FireBossEntity fireBoss && fireBoss.isSpawning()) {
+        if (animatable.isDeadOrDying() || animatable instanceof FireBossEntity fireBoss && (fireBoss.isSpawning() || fireBoss.isDespawning())) {
             return RenderType.entityTranslucent(texture);
         }
         return super.getRenderType(animatable, texture, bufferSource, partialTick);

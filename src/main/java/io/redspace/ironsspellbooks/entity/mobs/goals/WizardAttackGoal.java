@@ -150,7 +150,7 @@ public class WizardAttackGoal extends Goal {
         this.spellAttackDelay = -1;
         this.mob.setAggressive(false);
         this.mob.getMoveControl().strafe(0, 0);
-
+        this.mob.getNavigation().stop();
     }
 
     public boolean requiresUpdateEveryTick() {

@@ -85,6 +85,15 @@ import java.util.Optional;
 public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IAnimatedAttacker, IEntityWithComplexSpawn, IClientEventEntity {
     public static final byte STOP_FOG = 0;
     public static final byte START_FOG = 1;
+    /**
+     * delay in seconds the boss will wait without being aggroed until he begins despawn sequence
+     */
+    public static final int PROC_DESPAWN_SECONDS = 60;
+    /**
+     * maximum elapsed time in seconds the boss will last in unloaded chunks before deleting himself
+     */
+    //todo: implement
+    public static final int UNLOADED_DESPAWN_LIMIT_SECONDS = 300;
 
     @Override
     public void handleClientEvent(byte eventId) {
@@ -111,6 +120,7 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
     }
 
     private static final EntityDataAccessor<Boolean> DATA_SOUL_MODE = SynchedEntityData.defineId(FireBossEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_IS_DESPAWNING = SynchedEntityData.defineId(FireBossEntity.class, EntityDataSerializers.BOOLEAN);
     private static final AttributeModifier SOUL_SPEED_MODIFIER = new AttributeModifier(IronsSpellbooks.id("soul_mode"), 0.05, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     private static final AttributeModifier SOUL_SCALE_MODIFIER = new AttributeModifier(IronsSpellbooks.id("soul_mode"), 0.15, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     private static final AttributeModifier MANA_MODIFIER = new AttributeModifier(IronsSpellbooks.id("mana"), 10000, AttributeModifier.Operation.ADD_VALUE);
@@ -157,6 +167,7 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
     protected void defineSynchedData(SynchedEntityData.Builder pBuilder) {
         super.defineSynchedData(pBuilder);
         pBuilder.define(DATA_SOUL_MODE, false);
+        pBuilder.define(DATA_IS_DESPAWNING, false);
     }
 
     protected LookControl createLookControl() {
@@ -286,6 +297,7 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
     static final int ERUPTION_BEGIN_ANIM_TIME = (int) (6.5 * 20);
     static final int STANCE_BREAK_COUNT = 2;
     int spawnTimer;
+    int despawnAggroDelay;
     private static final int SPAWN_ANIM_TIME = (int) (8.75 * 20);
     private static final int SPAWN_DELAY = 40;
 
@@ -323,7 +335,7 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
 
     @Override
     public boolean isInvulnerableTo(DamageSource pSource) {
-        return isSpawning() || super.isInvulnerableTo(pSource);
+        return isSpawning() || isDespawning() || super.isInvulnerableTo(pSource);
     }
 
     @Override
@@ -345,7 +357,25 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
                 spawnKnight(false);
             }
         }
+        if (isDespawning()) {
+            // reuse death time for fadeout animations
+            deathTime++;
+            if (!level.isClientSide) {
+                deathParticles();
+                if (getTarget() != null) {
+                    // stop despawning if we re-aggro
+                    setDespawning(false);
+                }
+                if (deathTime > 160) {
+                    doForcedDespawned();
+                }
+            }
+        } else if (deathTime > 0 && !isDeadOrDying()) {
+            // quickly fade back in
+            deathTime = Math.max(0, deathTime - 3);
+        }
         if (!level.isClientSide) {
+            // while this is server-only logic, this cannot be in aistep because ai is disabled during stance breaks
             if (isStanceBroken()) {
                 stanceBreakTimer--;
                 handleStanceBreakSequence();
@@ -354,6 +384,16 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
                 soulParticles();
             }
         }
+    }
+
+    private void doForcedDespawned() {
+        // discard
+        this.playSound(SoundRegistry.FIRE_BOSS_ACCENT.get(), 5, 1);
+        Vec3 vec3 = this.getBoundingBox().getCenter();
+        MagicManager.spawnParticles(level, ParticleRegistry.EMBEROUS_ASH_PARTICLE.get(), vec3.x, vec3.y, vec3.z, 25, 0.2, 0.2, 0.2, 0.12, false);
+        killNearbySummonedKnights();
+        remove(RemovalReason.DISCARDED);
+        IronsSpellbooks.LOGGER.info("{} despawned due to inactivity", this);
     }
 
     private void handleStanceBreakSequence() {
@@ -418,8 +458,8 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
             level.playSound(null, position.x, position.y, position.z, SoundRegistry.SOULCALLER_TOLL_SUCCESS, SoundSource.PLAYERS, 5f, .75f);
         }
         //step sounds
-        if (animProgress == SPAWN_DELAY + 40 || animProgress == SPAWN_DELAY + 60 || animProgress == SPAWN_DELAY + 80 || animProgress == SPAWN_DELAY + 100 || animProgress == SPAWN_DELAY + 114 || animProgress == SPAWN_DELAY + 128) {
-            level.playSound(null, position.x, position.y, position.z, SoundRegistry.KEEPER_STEP, this.getSoundSource(), 0.5f, 1f);
+        if (animProgress == SPAWN_DELAY + 20 || animProgress == SPAWN_DELAY + 40 || animProgress == SPAWN_DELAY + 60 || animProgress == SPAWN_DELAY + 80 || animProgress == SPAWN_DELAY + 100 || animProgress == SPAWN_DELAY + 114 || animProgress == SPAWN_DELAY + 128) {
+            level.playSound(null, position.x, position.y, position.z, SoundRegistry.KEEPER_STEP, this.getSoundSource(), 0.4f, 1f);
         }
         // summon scythe sound (happens at tick 132, with 17 tick windup)
         if (animProgress == SPAWN_DELAY + 132 - 17) {
@@ -436,8 +476,12 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
         if (currentHealth < maxHealth - eruptionHealthStep * (stanceBreakCounter + 1)) {
             triggerStanceBreak();
         }
-        if (this.tickCount % 30 == 0 && this.getTarget() == null && this.tickCount - this.getLastHurtByMobTimestamp() > 200) {
+        if (tickCount > 400 && !isDespawning() && this.getTarget() == null && this.tickCount - this.getLastHurtByMobTimestamp() > 200) {
             this.heal(5);
+            if (despawnAggroDelay++ > PROC_DESPAWN_SECONDS * 20) {
+                setDespawning(true);
+                level.playSound(null, this.blockPosition(), SoundRegistry.FIRE_BOSS_ACCENT.get(), SoundSource.HOSTILE, 4, 0.75f);
+            }
         }
         if (this.isAggressive() && this.tickCount % (12 * 20) == 0) {
             int knightCount = level.getEntitiesOfClass(KeeperEntity.class, this.getBoundingBox().inflate(50, 20, 50)).size();
@@ -462,7 +506,7 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
             }
             knight.finalizeSpawn(serverLevel, level.getCurrentDifficultyAt(this.blockPosition()), MobSpawnType.MOB_SUMMONED, null);
             level.addFreshEntity(knight);
-            level.playSound(null, spawn.x, spawn.y, spawn.z, SoundRegistry.FIRE_BOSS_DEATH_FINAL.get(), this.getSoundSource(), 2, .9f);
+            level.playSound(null, spawn.x, spawn.y, spawn.z, SoundRegistry.FIRE_BOSS_ACCENT.get(), this.getSoundSource(), 2, .9f);
         }
     }
 
@@ -526,32 +570,41 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
             this.playSound(SoundRegistry.FIRE_BOSS_DEATH.get(), 5, 1);
             Vec3 vec3 = this.getBoundingBox().getCenter();
             MagicManager.spawnParticles(level, ParticleRegistry.EMBEROUS_ASH_PARTICLE.get(), vec3.x, vec3.y, vec3.z, 25, 0.2, 0.2, 0.2, 0.12, false);
-            level.getEntitiesOfClass(KeeperEntity.class, this.getBoundingBox().inflate(32, 16, 32)).stream().filter(KeeperEntity::isSummoned).forEach(LivingEntity::kill);
+            killNearbySummonedKnights();
         }
+    }
+
+    private void killNearbySummonedKnights() {
+        level.getEntitiesOfClass(KeeperEntity.class, this.getBoundingBox().inflate(50, 20, 50)).stream().filter(KeeperEntity::isSummoned).forEach(LivingEntity::kill);
     }
 
     @Override
     protected void tickDeath() {
         this.deathTime++;
         if (!level.isClientSide) {
-            Vec3 vec3 = this.position();
             float scale = getScale();
-            int particles = (int) Mth.lerp(Math.clamp((deathTime - 20) / 60f, 0, 1), 0, 5 * scale);
-            float range = Mth.lerp(Math.clamp((deathTime - 20) / 80f, 0, 1), 0, 0.4f * scale);
-            if (particles > 0) {
-                MagicManager.spawnParticles(level, ParticleRegistry.EMBEROUS_ASH_PARTICLE.get(), vec3.x, vec3.y + 1, vec3.z, particles, range, range, range, 100, false);
-            }
+            Vec3 vec3 = this.position();
+            deathParticles();
             if (this.deathTime >= 160 && !this.level().isClientSide() && !this.isRemoved()) {
                 if (this.deathLoot != null) {
                     deathLoot.getItems().forEach(this::spawnAtLocation);
                 }
                 this.remove(Entity.RemovalReason.KILLED);
                 MagicManager.spawnParticles(level, ParticleRegistry.EMBEROUS_ASH_PARTICLE.get(), vec3.x, vec3.y + 1, vec3.z, 50, 0.3, 0.3, 0.3, 0.2 * scale, true);
-                this.playSound(SoundRegistry.FIRE_BOSS_DEATH_FINAL.get(), 4, .9f);
+                this.playSound(SoundRegistry.FIRE_BOSS_ACCENT.get(), 4, .9f);
             }
         }
     }
 
+    private void deathParticles() {
+        float scale = getScale();
+        Vec3 vec3 = this.position();
+        int particles = (int) Mth.lerp(Math.clamp((deathTime - 20) / 60f, 0, 1), 0, 5 * scale);
+        float range = Mth.lerp(Math.clamp((deathTime - 20) / 80f, 0, 1), 0, 0.4f * scale);
+        if (particles > 0) {
+            MagicManager.spawnParticles(level, ParticleRegistry.EMBEROUS_ASH_PARTICLE.get(), vec3.x, vec3.y + 1, vec3.z, particles, range, range, range, 100, false);
+        }
+    }
 
     @Override
     public void calculateEntityAnimation(boolean pIncludeHeight) {
@@ -713,6 +766,17 @@ public class FireBossEntity extends AbstractSpellCastingMob implements Enemy, IA
 
     public void setSoulMode(boolean soulMode) {
         entityData.set(DATA_SOUL_MODE, soulMode);
+    }
+
+    public boolean isDespawning() {
+        return entityData.get(DATA_IS_DESPAWNING);
+    }
+
+    public void setDespawning(boolean despawning) {
+        entityData.set(DATA_IS_DESPAWNING, despawning);
+        if (!despawning) {
+            despawnAggroDelay = 0;
+        }
     }
 
     @Override

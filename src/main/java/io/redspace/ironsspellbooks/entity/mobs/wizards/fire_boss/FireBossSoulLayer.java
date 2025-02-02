@@ -34,7 +34,7 @@ public class FireBossSoulLayer extends GeoRenderLayer<AbstractSpellCastingMob> {
         if (i <= 0) {
             return;
         }
-        float alpha = animatable.isDeadOrDying() ? i / 120f : i / (float) animatable.hurtDuration * 2;
+        float alpha = (animatable.deathTime > 0) ? i / 120f : i / (float) animatable.hurtDuration * 2;
 
         float f = (float) animatable.tickCount + partialTick;
         var renderType = RenderType.energySwirl(TEXTURE, f * 0.02F % 1.0F, f * 0.01F % 1.0F);
