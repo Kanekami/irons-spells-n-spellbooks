@@ -63,7 +63,7 @@ public class PyriumStaffRenderer extends BlockEntityWithoutLevelRenderer {
         poseStack.mulPose(Axis.ZP.rotationDegrees(135));
         poseStack.mulPose(Axis.YP.rotationDegrees(-90));
 
-        poseStack.translate(0, -1.42 / 16f - 9.5 / 32f, 0);
+        poseStack.translate(0, -6.375/16f, 0);
         poseStack.scale(0.5f, 0.5f, 0.5f);
         headModel.renderToBuffer(poseStack, ItemRenderer.getFoilBufferDirect(
                 bufferSource, headModel.renderType(), false, itemStack.hasFoil()

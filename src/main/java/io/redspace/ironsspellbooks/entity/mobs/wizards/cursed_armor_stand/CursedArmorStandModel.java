@@ -22,7 +22,7 @@ public class CursedArmorStandModel extends AbstractSpellCastingMobModel {
         return ArmorStandRenderer.DEFAULT_SKIN_LOCATION;
     }
 
-    public static double[] rightArmPos = new double[]{110, -25, 180};
+    public static double[] rightArmPos = new double[]{0, 0, 0};
 
     @Override
     public void setCustomAnimations(AbstractSpellCastingMob entity, long instanceId, AnimationState<AbstractSpellCastingMob> animationState) {
