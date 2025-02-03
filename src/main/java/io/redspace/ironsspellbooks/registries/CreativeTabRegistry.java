@@ -53,6 +53,7 @@ public class CreativeTabRegistry {
                 entries.accept(ItemRegistry.ICE_STAFF.get());
                 entries.accept(ItemRegistry.ARTIFICER_STAFF.get());
                 entries.accept(ItemRegistry.LIGHTNING_ROD_STAFF.get());
+                entries.accept(ItemRegistry.PYRIUM_STAFF.get());
                 entries.accept(ItemRegistry.MAGEHUNTER.get());
                 entries.accept(ItemRegistry.SPELLBREAKER.get());
                 entries.accept(ItemRegistry.AMETHYST_RAPIER.get());
