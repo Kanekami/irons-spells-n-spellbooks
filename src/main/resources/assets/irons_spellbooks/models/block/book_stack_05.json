@@ -1,34 +1,18 @@
 {
 	"credit": "Made with Blockbench",
 	"parent": "irons_spellbooks:block/book_stack_0",
-
-	"texture_size": [32, 32],
 	"ambientocclusion": false,
+	"texture_size": [32, 32],
 	"textures": {
-		"0": "irons_spellbooks:block/book_stack",
 		"2": "irons_spellbooks:block/book_stack_alt",
 		"particle": "irons_spellbooks:block/book_stack_particle"
 	},
 	"elements": [
 		{
-			"name": "book_3",
-			"from": [0.5, 0, 0],
-			"to": [7.5, 4, 10],
-			"rotation": {"angle": -22.5, "axis": "y", "origin": [4.25, 0, 5]},
-			"faces": {
-				"north": {"uv": [11.5, 5, 8, 7], "texture": "#0"},
-				"east": {"uv": [11, 5, 16, 7], "texture": "#0"},
-				"south": {"uv": [8, 5, 11.5, 7], "texture": "#0"},
-				"west": {"uv": [11.5, 0, 13.5, 5], "rotation": 90, "texture": "#0"},
-				"up": {"uv": [8, 0, 11.5, 5], "texture": "#0"},
-				"down": {"uv": [8, 0, 11.5, 5], "texture": "#0"}
-			}
-		},
-		{
 			"name": "book_6",
-			"from": [9.01, 0.01, 3.01],
-			"to": [15.99, 3.99, 12.99],
-			"rotation": {"angle": 0, "axis": "y", "origin": [12.5, 0, 8]},
+			"from": [8.01, 0.01, 1.01],
+			"to": [14.99, 3.99, 10.99],
+			"rotation": {"angle": 22.5, "axis": "y", "origin": [11.5, 0, 6]},
 			"faces": {
 				"north": {"uv": [0, 5, 3.5, 7], "texture": "#2"},
 				"east": {"uv": [3.5, 0, 5.5, 5], "rotation": 90, "texture": "#2"},
@@ -40,23 +24,23 @@
 		},
 		{
 			"name": "book_7",
-			"from": [2.5, 4, 4.5],
-			"to": [12.5, 8, 11.5],
-			"rotation": {"angle": 0, "axis": "y", "origin": [7.5, 4, 8]},
+			"from": [2, 2, 1],
+			"to": [9, 6, 11],
+			"rotation": {"angle": -22.5, "axis": "x", "origin": [5.5, 2, 6]},
 			"faces": {
-				"north": {"uv": [11, 5, 16, 7], "texture": "#2"},
-				"east": {"uv": [8, 5, 11.5, 7], "texture": "#2"},
-				"south": {"uv": [11.5, 0, 13.5, 5], "rotation": 90, "texture": "#2"},
-				"west": {"uv": [11.5, 5, 8, 7], "texture": "#2"},
-				"up": {"uv": [8, 0, 11.5, 5], "rotation": 270, "texture": "#2"},
-				"down": {"uv": [8, 5, 11.5, 0], "rotation": 90, "texture": "#2"}
+				"north": {"uv": [11.5, 5, 8, 7], "texture": "#2"},
+				"east": {"uv": [11, 5, 16, 7], "texture": "#2"},
+				"south": {"uv": [8, 5, 11.5, 7], "texture": "#2"},
+				"west": {"uv": [11.5, 0, 13.5, 5], "rotation": 90, "texture": "#2"},
+				"up": {"uv": [8, 0, 11.5, 5], "texture": "#2"},
+				"down": {"uv": [8, 5, 11.5, 0], "texture": "#2"}
 			}
 		},
 		{
 			"name": "book_8",
-			"from": [2.5, 0, 7.5],
-			"to": [12.5, 4, 14.5],
-			"rotation": {"angle": -22.5, "axis": "y", "origin": [7.5, 0, 11]},
+			"from": [0.5, 0, 7.5],
+			"to": [10.5, 4, 14.5],
+			"rotation": {"angle": -45, "axis": "y", "origin": [5.5, 0, 11]},
 			"faces": {
 				"north": {"uv": [11, 12, 16, 14], "texture": "#2"},
 				"east": {"uv": [8, 12, 11.5, 14], "texture": "#2"},

@@ -1,9 +1,8 @@
 {
 	"credit": "Made with Blockbench",
 	"parent": "irons_spellbooks:block/book_stack_0",
-
-	"texture_size": [32, 32],
 	"ambientocclusion": false,
+	"texture_size": [32, 32],
 	"textures": {
 		"0": "irons_spellbooks:block/book_stack_alt",
 		"2": "irons_spellbooks:block/book_stack",
@@ -39,17 +38,17 @@
 			}
 		},
 		{
-			"name": "book_6",
+			"name": "book_8",
 			"from": [3.5, 8, 5.5],
 			"to": [13.5, 12, 12.5],
 			"rotation": {"angle": 22.5, "axis": "y", "origin": [8.5, 8, 9]},
 			"faces": {
-				"north": {"uv": [3, 5, 8, 7], "texture": "#2"},
-				"east": {"uv": [0, 5, 3.5, 7], "texture": "#2"},
-				"south": {"uv": [3.5, 0, 5.5, 5], "rotation": 90, "texture": "#2"},
-				"west": {"uv": [3.5, 5, 0, 7], "texture": "#2"},
-				"up": {"uv": [0, 0, 3.5, 5], "rotation": 270, "texture": "#2"},
-				"down": {"uv": [0, 5, 3.5, 0], "rotation": 90, "texture": "#2"}
+				"north": {"uv": [11, 12, 16, 14], "texture": "#0"},
+				"east": {"uv": [8, 12, 11.5, 14], "texture": "#0"},
+				"south": {"uv": [11.5, 7, 13.5, 12], "rotation": 90, "texture": "#0"},
+				"west": {"uv": [11.5, 12, 8, 14], "texture": "#0"},
+				"up": {"uv": [8, 7, 11.5, 12], "rotation": 270, "texture": "#0"},
+				"down": {"uv": [8, 7, 11.5, 12], "rotation": 90, "texture": "#0"}
 			}
 		},
 		{
