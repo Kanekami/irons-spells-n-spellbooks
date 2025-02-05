@@ -3,7 +3,7 @@
   "fallback": "minecraft:empty",
   "elements": [
     {
-      "weight": 1,
+      "weight": 2,
       "element": {
         "location": "irons_spellbooks:citadel/rampart/decoration/trophy/chest",
         "processors": "irons_spellbooks:citadel_randomization",
@@ -12,7 +12,7 @@
       }
     },
     {
-      "weight": 2,
+      "weight": 3,
       "element": {
         "location": "irons_spellbooks:citadel/rampart/decoration/trophy/brazier",
         "processors": "irons_spellbooks:citadel_randomization",
@@ -21,7 +21,7 @@
       }
     },
     {
-      "weight": 2,
+      "weight": 3,
       "element": {
         "location": "irons_spellbooks:citadel/rampart/decoration/trophy/spawner",
         "processors": "irons_spellbooks:citadel_randomization",
@@ -33,6 +33,15 @@
       "weight": 1,
       "element": {
         "location": "irons_spellbooks:citadel/rampart/decoration/trophy/empty",
+        "processors": "irons_spellbooks:citadel_randomization",
+        "projection": "rigid",
+        "element_type": "minecraft:single_pool_element"
+      }
+    },
+    {
+      "weight": 1,
+      "element": {
+        "location": "irons_spellbooks:citadel/rampart/decoration/trophy/secret_piglin",
         "processors": "irons_spellbooks:citadel_randomization",
         "projection": "rigid",
         "element_type": "minecraft:single_pool_element"

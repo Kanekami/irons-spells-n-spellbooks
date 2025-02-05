@@ -14,10 +14,10 @@
             {
               "function": "minecraft:set_damage",
               "damage": {
-                "type": "minecraft:uniform",
-                "min": 100,
-                "max": 300
-              }
+                "min": 0.15,
+                "max": 0.35
+              },
+              "add": false
             }
           ]
         }
