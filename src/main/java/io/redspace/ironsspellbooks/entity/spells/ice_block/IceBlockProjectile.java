@@ -155,8 +155,10 @@ public class IceBlockProjectile extends AbstractMagicProjectile implements GeoEn
         var target = getTarget();
         if (target != null) {
             Vec3 diff = target.position().subtract(this.position());
+            var distance = diff.horizontalDistanceSqr();
+            var factor = Math.clamp(distance / 16.0, 0, 1);
             if (diff.horizontalDistanceSqr() > 0.1) {
-                this.setDeltaMovement(getDeltaMovement().add(diff.multiply(1, 0, 1).normalize().scale(.025f)));
+                this.setDeltaMovement(getDeltaMovement().add(diff.multiply(1, 0, 1).normalize().scale(.025f * ((airTime <= 0 ? 2 : 1) + factor * 2))));
             }
         }
         if (noPhysics) {
@@ -196,7 +198,7 @@ public class IceBlockProjectile extends AbstractMagicProjectile implements GeoEn
     }
 
     private void handleFalling() {
-        this.setDeltaMovement(0, getDeltaMovement().y - .15, 0);
+        this.setDeltaMovement(getDeltaMovement().add(0, -.15, 0));
         //server logic only
         if (!level.isClientSide) {
             if (onGround()) {
