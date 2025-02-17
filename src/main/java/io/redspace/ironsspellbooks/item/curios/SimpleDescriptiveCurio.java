@@ -25,17 +25,18 @@ public class SimpleDescriptiveCurio extends CurioBaseItem {
     }
 
     @Override
-    public List<Component> getSlotsTooltip(List<Component> tooltips, ItemStack stack) {
-        if (slotIdentifier != null) {
-            var title = Component.translatable("curios.modifiers." + this.slotIdentifier).withStyle(ChatFormatting.GOLD);
-            if (showHeader) {
-                tooltips.add(Component.empty());
-                tooltips.add(title);
-            }
-            tooltips.addAll(getDescriptionLines(stack));
+    public List<Component> getAttributesTooltip(List<Component> tooltips, TooltipContext tooltipContext, ItemStack stack) {
+        int i = tooltips.size();
+        var attrTooltip = super.getAttributesTooltip(tooltips, tooltipContext, stack);
+        boolean needHeader = attrTooltip.size() == i;
+        var descriptionLines = getDescriptionLines(stack);
+        if (needHeader && !descriptionLines.isEmpty()) {
+            attrTooltip.add(Component.empty());
+            attrTooltip.add(Component.translatable("curios.modifiers." + slotIdentifier).withStyle(ChatFormatting.GOLD));
         }
+        attrTooltip.addAll(descriptionLines);
 
-        return super.getSlotsTooltip(tooltips, stack);
+        return attrTooltip;
     }
 
     public List<Component> getDescriptionLines(ItemStack stack) {
